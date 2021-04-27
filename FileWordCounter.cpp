@@ -225,55 +225,6 @@ int parse_input(int argc, char **argv, InputVec *in, std::vector<VPath *> *paths
     return closedir(dp);
 }
 
-
-double timeAnalysis(int argc, char **argv, int numOfIterations) {
-    struct timeval start{}, end{};
-    long totalTime = 0;
-
-    InputVec inputVec;
-    std::vector<VPath *> paths;
-    int thread_num;
-    if (parse_input(argc, argv, &inputVec, &paths, thread_num) < 0) {
-        printf("FAIL\n");
-        exit(-1);
-    }
-    CounterClient client;
-    OutputVec outputVec;
-
-
-    for ( int i = 0; i < numOfIterations; i++ ) {
-        printf("Start iteration %d/%d\n", i + 1, numOfIterations);
-        gettimeofday(&start, NULL);
-        JobState state;
-        // start the map-reduce process
-        JobHandle job = startMapReduceJob(client, inputVec, outputVec, thread_num);
-        getJobState(job, &state);
-
-        // repeat until the end of the reduce stage
-        while (state.stage != REDUCE_STAGE || state.percentage != 100.0) {
-            getJobState(job, &state);
-        }
-        closeJobHandle(job);
-        gettimeofday(&end, NULL);
-        totalTime += ((end.tv_sec - start.tv_sec) * 1000000000) + ((end.tv_usec - start.tv_usec) * 1000);
-
-        // delete allocations
-        for ( OutputPair & pair: outputVec ) {
-            delete pair.first;
-            delete pair.second;
-        }
-    }
-
-    // de-allocate the VPath that allocated for the input vector
-    for ( unsigned int i = 0; i < paths.size(); i++ ) {
-        delete paths[i];
-    }
-
-    double avgTime = (totalTime / (double) (numOfIterations)) / 1000000000;
-    printf("took %f s\n", avgTime);
-    return avgTime;
-}
-
 /**
  * the usage of the program should be: <directory_name> <thread_num>
  * @param argc
@@ -329,7 +280,6 @@ int main(int argc, char **argv) {
     for ( unsigned int i = 0; i < paths.size(); i++ ) {
         delete paths[i];
     }
-//    timeAnalysis(argc,argv,1);
 
     // success
     return 0;
