@@ -18,12 +18,31 @@ This will be identical for different tasks.<br/>
 An abstract class that defines the api the user of the framework should implement in order for the library to work.<br/>
 This part will be different for every tasks.<br/>
 The methods needed to be implement are<br/>
-![client_api.png](https://github.com/IdoSagiv/map-reduce-library/blob/main/images/client_api.png?raw=true)<br/>
+```cpp
+class MapReduceClient {
+public:
+    /**
+     * gets a single pair (K1, V1). calls emit2(K2,V2, context) any number of times to output (K2, V2) pairs.
+     * @param key - key to map
+     * @param value - value to map
+     * @param context - information on the current thread, given by the framework
+     */
+    virtual void map(const K1 *key, const V1 *value, void *context) const = 0;
 
+    /**
+     * gets a single K2 key and a vector of all its respective V2 values.
+     * calls emit3(K3, V3, context) any number of times (usually once) to output (K3, V3) pairs.
+     * @param key - key to reduce.
+     * @param values - a vector of the given key's values.
+     * @param context - information on the current thread, given by the framework
+     */
+    virtual void reduce(const K2 *key, const std::vector<V2 *> & values, void *context) const = 0;
+};
+```
 ## Usage Example - FileWordCounter.cpp
 ### Description
 In the given example the library is used in order to count the number of times each word appears in a given directory of files.</br>
-* In order to run the example, run it from the command line with the arguments _[dirPath] [num of threads]_
+* In order to run the example, run it from the command line with the arguments `[dirPath] [num of threads]`
 The input is a vector of strings containing the filenames of the files in the directory
 #### Map stage
 In this stage an input file is mapped to pairs of the form _(word,count)_ where word is some word in the file and count is the number of times it appeared in the file. Such pair is emitted for every word in the file.
